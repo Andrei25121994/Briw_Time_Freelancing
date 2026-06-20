@@ -122,7 +122,88 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   const [sportLoaded, setSportLoaded] = useState(false);
   const [isHeaderSigningOut, setIsHeaderSigningOut] = useState(false);
   const [ownershipClaimed, setOwnershipClaimed] = useState(false);
+  const [paidMonthsByFirm, setPaidMonthsByFirm] = useState<Record<string, boolean>>({});
+  const [savingPaidMonthByFirm, setSavingPaidMonthByFirm] = useState<Record<string, boolean>>({});
+  const [invoiceStatusFeatureReady, setInvoiceStatusFeatureReady] = useState(true);
   const isPaperTheme = appTheme === 'paper';
+  const isOceanTheme = appTheme === 'ocean';
+  const isSunsetTheme = appTheme === 'sunset';
+
+  const shellTextClass = isPaperTheme ? 'text-slate-900' : isSunsetTheme ? 'text-rose-50' : isOceanTheme ? 'text-cyan-50' : 'text-emerald-50';
+  const topBarClass = isPaperTheme
+    ? 'border-blue-300/30 bg-white/70 text-slate-900'
+    : isSunsetTheme
+      ? 'border-rose-700/30 bg-rose-950/45 text-rose-50'
+      : isOceanTheme
+        ? 'border-cyan-700/30 bg-slate-950/45 text-cyan-50'
+        : 'border-emerald-700/30 bg-emerald-950/40 text-emerald-50';
+  const logoGradientClass = isSunsetTheme
+    ? 'from-orange-400 via-rose-500 to-amber-500'
+    : isOceanTheme
+      ? 'from-cyan-400 via-blue-500 to-sky-500'
+      : isPaperTheme
+        ? 'from-cyan-400 via-blue-500 to-violet-500'
+        : 'from-emerald-400 via-teal-500 to-lime-500';
+  const titleGradientClass = isSunsetTheme
+    ? 'from-orange-300 via-rose-300 to-amber-200'
+    : isOceanTheme
+      ? 'from-cyan-300 via-sky-300 to-blue-300'
+      : isPaperTheme
+        ? 'from-sky-500 via-blue-500 to-orange-400'
+        : 'from-emerald-300 via-teal-300 to-lime-300';
+  const cardClass = isPaperTheme
+    ? 'bg-white/80 border border-sky-200 hover:border-sky-300 text-slate-900 shadow-sm'
+    : isSunsetTheme
+      ? 'bg-rose-950/35 border border-rose-900/55 hover:border-orange-500/45 text-rose-50 shadow-sm'
+      : isOceanTheme
+        ? 'bg-slate-900/45 border border-cyan-900/55 hover:border-cyan-500/45 text-cyan-50 shadow-sm'
+        : 'bg-emerald-950/30 border border-emerald-900/55 hover:border-emerald-500/45 text-emerald-50 shadow-sm';
+  const subtleCardClass = isPaperTheme
+    ? 'rounded-xl border border-sky-200 bg-sky-50 p-3'
+    : isSunsetTheme
+      ? 'rounded-xl border border-rose-900/55 bg-rose-950/35 p-3'
+      : isOceanTheme
+        ? 'rounded-xl border border-cyan-900/55 bg-slate-900/45 p-3'
+        : 'rounded-xl border border-emerald-900/55 bg-emerald-950/30 p-3';
+  const firmCardClass = isPaperTheme
+    ? 'bg-sky-100/35 border border-sky-200/80 hover:border-sky-300 text-slate-900'
+    : isSunsetTheme
+      ? 'bg-rose-950/30 border border-rose-900/60 hover:border-orange-500/40 text-rose-50'
+      : isOceanTheme
+        ? 'bg-slate-900/45 border border-cyan-900/60 hover:border-cyan-500/40 text-cyan-50'
+        : 'bg-emerald-950/25 border border-emerald-900/60 hover:border-emerald-500/40 text-emerald-50';
+  const firmRowClass = isPaperTheme
+    ? 'bg-sky-50/80 border border-sky-200/80 hover:border-sky-300'
+    : isSunsetTheme
+      ? 'bg-rose-950/35 border border-rose-900/60 hover:border-orange-500/40'
+      : isOceanTheme
+        ? 'bg-slate-900/45 border border-cyan-900/60 hover:border-cyan-500/40'
+        : 'bg-emerald-950/30 border border-emerald-900/60 hover:border-emerald-500/40';
+  const pillClass = isPaperTheme
+    ? 'bg-sky-200/70 text-blue-700'
+    : isSunsetTheme
+      ? 'bg-orange-500/20 text-orange-200'
+      : isOceanTheme
+        ? 'bg-cyan-500/20 text-cyan-200'
+        : 'bg-emerald-500/20 text-emerald-200';
+  const emptyPanelClass = isPaperTheme
+    ? 'bg-gradient-to-br from-white/80 to-sky-50/60 border border-sky-200/70'
+    : isSunsetTheme
+      ? 'bg-gradient-to-br from-rose-950/45 to-orange-950/20 border border-rose-900/50'
+      : isOceanTheme
+        ? 'bg-gradient-to-br from-slate-900/50 to-cyan-950/20 border border-cyan-900/45'
+        : 'bg-gradient-to-br from-emerald-950/40 to-teal-950/20 border border-emerald-900/50';
+  const mutedTextClass = isPaperTheme ? 'text-slate-500' : isSunsetTheme ? 'text-rose-200/80' : isOceanTheme ? 'text-slate-300' : 'text-emerald-200/80';
+  const primaryTextClass = isPaperTheme ? 'text-blue-600' : isSunsetTheme ? 'text-orange-300' : isOceanTheme ? 'text-cyan-300' : 'text-emerald-300';
+  const secondaryTextClass = isPaperTheme ? 'text-orange-500' : isSunsetTheme ? 'text-rose-300' : isOceanTheme ? 'text-sky-300' : 'text-lime-300';
+  const hoverSoftClass = isPaperTheme ? 'hover:bg-sky-100' : isSunsetTheme ? 'hover:bg-rose-900/35' : isOceanTheme ? 'hover:bg-cyan-900/20' : 'hover:bg-emerald-900/25';
+
+  const getFirmMonthLockKey = (firmId: string, monthKey: string) => `${firmId}__${monthKey}`;
+  const isFirmMonthPaid = (firmId: string, monthKey: string) => Boolean(paidMonthsByFirm[getFirmMonthLockKey(firmId, monthKey)]);
+  const isInvoiceStatusTableMissingError = (err: any) => {
+    const message = String(err?.message || '').toLowerCase();
+    return message.includes("firm_month_invoice_statuses") && message.includes('schema cache');
+  };
 
   const leaveTypes = ['VACATION', 'MEDICAL LEAVE', 'UNPAID LEAVE', 'STUDY LEAVE', 'MATERNITY LEAVE'];
   const sportActivities = ['GYM', 'RUNNING', 'WALKING', 'CYCLING', 'SWIMMING', 'YOGA', 'FOOTBALL', 'BASKETBALL', 'OTHER'];
@@ -160,6 +241,13 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'firms', filter: `user_id=eq.${userId}` },
+        () => {
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'firm_month_invoice_statuses', filter: `user_id=eq.${userId}` },
         () => {
           fetchData();
         }
@@ -430,6 +518,20 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         console.error('Error fetching firms:', fError);
         setError(`Eroare la încărcarea clienților: ${fError.message || JSON.stringify(fError)}`);
       }
+
+      const { data: paidData, error: paidError } = await (supabase.from('firm_month_invoice_statuses') as any)
+        .select('firm_id, month_key, is_paid')
+        .eq('user_id', userId)
+        .eq('is_paid', true);
+      if (paidError) {
+        if (isInvoiceStatusTableMissingError(paidError)) {
+          setInvoiceStatusFeatureReady(false);
+        }
+        console.error('Error fetching paid months:', paidError);
+      } else {
+        setInvoiceStatusFeatureReady(true);
+      }
+
       const { data: eData, error: eError } = await (supabase.from('timesheet_entries') as any)
         .select('*')
         .eq('user_id', userId)
@@ -439,6 +541,16 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         setError(`Eroare la încărcarea intrărilor: ${eError.message || JSON.stringify(eError)}`);
       }
       if (fData) setFirms(fData);
+      if (Array.isArray(paidData)) {
+        const nextMap: Record<string, boolean> = {};
+        for (const row of paidData) {
+          const firmId = String(row.firm_id ?? '');
+          const monthKey = String(row.month_key ?? '');
+          if (!firmId || !monthKey) continue;
+          nextMap[getFirmMonthLockKey(firmId, monthKey)] = true;
+        }
+        setPaidMonthsByFirm(nextMap);
+      }
       if (eData) setEntries(eData);
       await fetchMonthEntries(viewDate);
     } catch (err) {
@@ -447,6 +559,42 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
     }
     setLoading(false);
   }
+
+  const toggleFirmMonthPaid = async (firmId: string, monthKey: string, isPaid: boolean) => {
+    if (!invoiceStatusFeatureReady) {
+      alert('Functia Platit/Neplatit necesita migrarea noua in Supabase. Ruleaza fisierul supabase/migrations/20260620000400_create_firm_month_invoice_statuses.sql in SQL Editor.');
+      return;
+    }
+
+    const lockKey = getFirmMonthLockKey(firmId, monthKey);
+    setSavingPaidMonthByFirm((prev) => ({ ...prev, [lockKey]: true }));
+    try {
+      const payload = {
+        user_id: userId,
+        firm_id: firmId,
+        month_key: monthKey,
+        is_paid: isPaid,
+        paid_at: isPaid ? new Date().toISOString() : null,
+      };
+
+      const { error: upsertError } = await (supabase.from('firm_month_invoice_statuses') as any)
+        .upsert([payload], { onConflict: 'user_id,firm_id,month_key' });
+
+      if (upsertError) {
+        if (isInvoiceStatusTableMissingError(upsertError)) {
+          setInvoiceStatusFeatureReady(false);
+          alert('Nu exista tabela pentru statusurile de plata in Supabase. Ruleaza migrarea: supabase/migrations/20260620000400_create_firm_month_invoice_statuses.sql');
+          return;
+        }
+        alert(`Eroare la actualizarea statusului de factura: ${upsertError.message}`);
+        return;
+      }
+
+      setPaidMonthsByFirm((prev) => ({ ...prev, [lockKey]: isPaid }));
+    } finally {
+      setSavingPaidMonthByFirm((prev) => ({ ...prev, [lockKey]: false }));
+    }
+  };
 
   const handleSaveFirm = async () => {
     if (!fName.trim()) return alert("Te rog introduceți un nume pentru client!");
@@ -512,6 +660,12 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   };
 
   const handleEditEntry = (entry: any) => {
+    const entryMonthKey = getMonthKeyFromDate(entry.date);
+    if (isFirmMonthPaid(entry.firm_id, entryMonthKey)) {
+      alert(`Luna ${entryMonthKey} este marcata ca platita pentru acest client. Inregistrarile sunt blocate.`);
+      return;
+    }
+
     const parsed = (entry.description || '').match(/^\[([^\]]+)\]\s*(.*)$/);
     const isLeave = entry.total_amount === 0;
     setSelectedEntryId(entry.id);
@@ -526,10 +680,16 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
     setIsEntryModalOpen(true);
   };
 
-  const handleDeleteEntry = async (id: string) => {
+  const handleDeleteEntry = async (entry: any) => {
+    const entryMonthKey = getMonthKeyFromDate(entry.date);
+    if (isFirmMonthPaid(entry.firm_id, entryMonthKey)) {
+      alert(`Luna ${entryMonthKey} este marcata ca platita pentru acest client. Nu poti sterge inregistrari.`);
+      return;
+    }
+
     const confirmed = confirm('Ștergi această înregistrare?');
     if (!confirmed) return;
-    await (supabase.from('timesheet_entries') as any).delete().eq('id', id).eq('user_id', userId);
+    await (supabase.from('timesheet_entries') as any).delete().eq('id', entry.id).eq('user_id', userId);
     fetchData();
   };
 
@@ -578,6 +738,15 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   const handleSaveEntry = async () => {
     const firm = firms.find(f => f.id === selectedFirmId);
     if (!firm) return alert("Te rog alege un client!");
+
+    const targetMonthKey = getMonthKeyFromDate(date);
+    const existingEntry = selectedEntryId ? entries.find((e) => e.id === selectedEntryId) : null;
+    if (existingEntry && isFirmMonthPaid(existingEntry.firm_id, getMonthKeyFromDate(existingEntry.date))) {
+      return alert('Inregistrarea apartine unei luni platite si nu mai poate fi modificata.');
+    }
+    if (isFirmMonthPaid(selectedFirmId, targetMonthKey)) {
+      return alert(`Luna ${targetMonthKey} este marcata ca platita pentru acest client. Adaugarea sau modificarea este blocata.`);
+    }
     
     // Check for duplicate entry (same client + date)
     if (!selectedEntryId) {
@@ -720,23 +889,40 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   const handleSaveLeave = async () => {
     if (!leaveStart || !leaveEnd) return alert('Please select start and end dates');
     if (new Date(leaveStart) > new Date(leaveEnd)) return alert('Start date must be before end date');
+    if (firms.length === 0) return alert('Adauga cel putin un client inainte sa inregistrezi concediul.');
 
     setIsSavingLeave(true);
     setError(null);
     try {
-      // Generate PDF
-      generateLeaveRequestPDF(leaveReason, leaveStart, leaveEnd, leaveDescription);
+      // Use local date math to avoid timezone shifts on mobile browsers.
+      const parseDateKey = (value: string) => {
+        const [y, m, d] = value.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      };
+      const formatDateKey = (value: Date) => `${value.getFullYear()}-${pad2(value.getMonth() + 1)}-${pad2(value.getDate())}`;
 
       // Get date range and insert entries for all clients
-      const startDate = new Date(leaveStart);
-      const endDate = new Date(leaveEnd);
+      const startDate = parseDateKey(leaveStart);
+      const endDate = parseDateKey(leaveEnd);
       const currentDate = new Date(startDate);
 
-      const entriesToInsert = [];
+      for (const firm of firms) {
+        const scanDate = new Date(startDate);
+        while (scanDate <= endDate) {
+          const scanMonthKey = getMonthKeyFromDate(formatDateKey(scanDate));
+          if (isFirmMonthPaid(firm.id, scanMonthKey)) {
+            throw new Error(`Clientul ${firm.name} are luna ${scanMonthKey} marcata ca platita. Debifeaza statusul pentru a adauga concediu.`);
+          }
+          scanDate.setDate(scanDate.getDate() + 1);
+        }
+      }
+
+      const entriesToInsert: Array<Record<string, any>> = [];
       while (currentDate <= endDate) {
-        const dateStr = currentDate.toISOString().split('T')[0];
+        const dateStr = formatDateKey(currentDate);
         // Add entry for each client
         for (const firm of firms) {
+          if (!firm?.id) continue;
           entriesToInsert.push({
             user_id: userId,
             firm_id: firm.id,
@@ -744,7 +930,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
             start_time: '00:00',
             end_time: '00:00',
             total_hours: 0,
-            hourly_rate: firm.rate,
+            hourly_rate: Number(firm.rate) || 0,
             total_amount: 0,
             description: `[${leaveReason}]`
           });
@@ -752,16 +938,24 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      if (entriesToInsert.length > 0) {
-        const { error: insertErr } = await (supabase.from('timesheet_entries') as any).insert(entriesToInsert);
-        if (insertErr) {
-          console.error('Error inserting leave entries:', insertErr);
-          alert(`Error adding leave entries: ${insertErr.message}`);
-        } else {
-          alert(`Leave request created! ${entriesToInsert.length} entries added across all clients.`);
-          await fetchData();
-        }
+      if (entriesToInsert.length === 0) {
+        throw new Error('Nu exista clienti valizi pentru care sa fie adaugat concediul.');
       }
+
+      const { error: insertErr } = await (supabase.from('timesheet_entries') as any).insert(entriesToInsert);
+      if (insertErr) {
+        const details = [insertErr.message, (insertErr as any).details, (insertErr as any).hint].filter(Boolean).join(' | ');
+        console.error('Error inserting leave entries:', insertErr);
+        setError(`Eroare la concediu: ${details}`);
+        setIsSavingLeave(false);
+        alert(`Error adding leave entries: ${details}`);
+        return;
+      }
+
+      // Generate PDF only after entries are saved successfully.
+      generateLeaveRequestPDF(leaveReason, leaveStart, leaveEnd, leaveDescription);
+      alert(`Leave request created! ${entriesToInsert.length} entries added across all clients.`);
+      await fetchData();
 
       setIsSavingLeave(false);
       setIsLeaveModalOpen(false);
@@ -771,8 +965,10 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
       setLeaveDescription('');
     } catch (err) {
       console.error('Error:', err);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Eroare la concediu: ${message}`);
       setIsSavingLeave(false);
-      alert('Error processing leave request');
+      alert(`Error processing leave request: ${message}`);
     }
   };
 
@@ -971,31 +1167,46 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
       .map(getEntryDayKey)
       .filter((dayKey) => Boolean(dayKey) && dayKey.startsWith(`${selectedYear}-`))
   ).size;
+  const paidIncomeThisYear = entries.reduce((acc, entry) => {
+    const entryMonthKey = getMonthKeyFromDate(String(entry?.date ?? ''));
+    if (!entryMonthKey.startsWith(`${selectedYear}-`)) return acc;
+    if (!isFirmMonthPaid(String(entry?.firm_id ?? ''), entryMonthKey)) return acc;
+    return acc + Number(entry?.total_amount ?? 0);
+  }, 0);
+  const paidMonthsCountThisYear = new Set(
+    Object.keys(paidMonthsByFirm).filter((lockKey) => {
+      if (!paidMonthsByFirm[lockKey]) return false;
+      const [, monthKey] = lockKey.split('__');
+      return Boolean(monthKey) && monthKey.startsWith(`${selectedYear}-`);
+    })
+  ).size;
   const totalSportMinutes = sportSessions.reduce((acc, s) => acc + s.duration_minutes, 0);
   const totalSportHours = totalSportMinutes / 60;
+  const selectedEntryMonthKey = getMonthKeyFromDate(date);
+  const isSelectedFirmMonthPaid = Boolean(selectedFirmId) && isFirmMonthPaid(selectedFirmId, selectedEntryMonthKey);
 
   return (
-    <div className="min-h-screen bg-transparent text-white pb-32">
+    <div className={`min-h-screen bg-transparent pb-32 ${shellTextClass}`}>
       {/* HEADER */}
-      <div className="sticky top-0 z-30 backdrop-blur-2xl border-b border-blue-300/30 bg-white/70 text-slate-900 py-4 px-4 sm:px-6">
+      <div className={`sticky top-0 z-30 border-b py-4 px-4 backdrop-blur-2xl sm:px-6 ${topBarClass}`}>
         <div className="max-w-7xl mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-[28px] bg-gradient-to-br from-cyan-400 via-blue-500 to-violet-500 shadow-[0_28px_80px_-36px_rgba(59,130,246,0.8)]">
-              <svg viewBox="0 0 64 64" className="h-10 w-10 text-slate-900" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+            <div className={`flex h-16 w-16 items-center justify-center rounded-[28px] bg-gradient-to-br ${logoGradientClass} shadow-[0_28px_80px_-36px_rgba(59,130,246,0.8)]`}>
+              <svg viewBox="0 0 64 64" className={`h-10 w-10 ${isPaperTheme ? 'text-slate-900' : 'text-white'}`} fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 44L32 22L46 44H18Z" />
                 <path d="M24 38H40" />
                 <path d="M28 34H36" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-sky-500 via-blue-500 to-orange-400 bg-clip-text text-transparent leading-tight">PONTAJ PRO</h1>
-              <p className="text-sm sm:text-base text-slate-600 mt-1">Modern timesheet tracker with 3D UI</p>
+              <h1 className={`text-2xl sm:text-3xl font-extrabold bg-gradient-to-r ${titleGradientClass} bg-clip-text text-transparent leading-tight`}>PONTAJ PRO</h1>
+              <p className={`mt-1 text-sm sm:text-base ${mutedTextClass}`}>Modern timesheet tracker with 3D UI</p>
             </div>
           </div>
 
           <div className="flex flex-col items-start sm:items-end gap-1">
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Live clock</p>
-            <p className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-blue-500 via-sky-500 to-orange-400 bg-clip-text text-transparent tracking-tight">{currentTime}</p>
+            <p className={`text-xs uppercase tracking-[0.3em] ${mutedTextClass}`}>Live clock</p>
+            <p className={`text-xl sm:text-2xl font-extrabold bg-gradient-to-r ${titleGradientClass} bg-clip-text text-transparent tracking-tight`}>{currentTime}</p>
             <div className="mt-2 flex items-center gap-2">
               <button
                 onClick={() => setIsSettingsModalOpen(true)}
@@ -1031,74 +1242,79 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           
           {/* Period Selector */}
-          <div className="sm:col-span-2 lg:col-span-1 bg-white/80 border border-sky-200 rounded-2xl p-5 flex items-center justify-between hover:border-sky-300 transition-all shadow-sm text-slate-900">
+          <div className={`sm:col-span-2 lg:col-span-1 rounded-2xl p-5 flex items-center justify-between transition-all ${cardClass}`}>
             <button 
               onClick={() => setViewDate((prev) => shiftMonthKey(prev, -1))}
-              className="group p-2 hover:bg-sky-100 rounded-lg transition-colors"
+              className={`group p-2 rounded-lg transition-colors ${hoverSoftClass}`}
             >
               <IconChevronLeft />
             </button>
             <div className="text-center flex-1">
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Period</p>
+                <p className={`mb-1 text-xs font-medium uppercase tracking-wider ${mutedTextClass}`}>Period</p>
                 <div className="max-w-[180px] mx-auto">
                   <DatePicker value={`${viewDate}-01`} onChange={(v) => setViewDate(getMonthKeyFromDate(v))} />
                 </div>
               </div>
             <button 
               onClick={() => setViewDate((prev) => shiftMonthKey(prev, 1))}
-              className="group p-2 hover:bg-sky-100 rounded-lg transition-colors"
+              className={`group p-2 rounded-lg transition-colors ${hoverSoftClass}`}
             >
               <IconChevronRight />
             </button>
           </div>
 
           {/* Total RON */}
-          <div className="sm:col-span-1 bg-white/80 border border-sky-200 rounded-2xl p-5 hover:border-sky-300 transition-all shadow-sm text-slate-900">
+          <div className={`sm:col-span-1 rounded-2xl p-5 transition-all ${cardClass}`}>
             <div className="flex items-center gap-2 mb-2">
               <IconDollar />
-              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Income</p>
+              <p className={`text-xs font-medium uppercase tracking-wider ${mutedTextClass}`}>Income</p>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-blue-600">{totalAmount.toFixed(0)}</p>
-            <p className="text-xs text-slate-500 mt-1">RON</p>
+            <p className={`text-2xl sm:text-3xl font-bold ${primaryTextClass}`}>{totalAmount.toFixed(0)}</p>
+            <p className={`mt-1 text-xs ${mutedTextClass}`}>RON</p>
           </div>
 
           {/* Total Hours */}
-          <div className="sm:col-span-1 bg-white/80 border border-sky-200 rounded-2xl p-5 hover:border-sky-300 transition-all shadow-sm text-slate-900">
+          <div className={`sm:col-span-1 rounded-2xl p-5 transition-all ${cardClass}`}>
             <div className="flex items-center gap-2 mb-2">
               <IconClock />
-              <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Hours</p>
+              <p className={`text-xs font-medium uppercase tracking-wider ${mutedTextClass}`}>Hours</p>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-blue-600">{totalHours.toFixed(1)}</p>
-            <p className="text-xs text-slate-500 mt-1">Hours</p>
+            <p className={`text-2xl sm:text-3xl font-bold ${primaryTextClass}`}>{totalHours.toFixed(1)}</p>
+            <p className={`mt-1 text-xs ${mutedTextClass}`}>Hours</p>
           </div>
 
           {/* Clients Count */}
-          <div className="sm:col-span-2 lg:col-span-1 bg-white/80 border border-sky-200 rounded-2xl p-5 hover:border-sky-300 transition-all shadow-sm text-slate-900">
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-2">Active Clients</p>
-            <p className="text-2xl sm:text-3xl font-bold text-orange-500">{firms.length}</p>
-            <p className="text-xs text-slate-500 mt-1">Clients</p>
+          <div className={`sm:col-span-2 lg:col-span-1 rounded-2xl p-5 transition-all ${cardClass}`}>
+            <p className={`mb-2 text-xs font-medium uppercase tracking-wider ${mutedTextClass}`}>Active Clients</p>
+            <p className={`text-2xl sm:text-3xl font-bold ${secondaryTextClass}`}>{firms.length}</p>
+            <p className={`mt-1 text-xs ${mutedTextClass}`}>Clients</p>
           </div>
         </div>
 
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-sky-200 bg-white/80 p-5 shadow-sm text-slate-900">
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Libere in luna selectata</p>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold text-blue-600">{leaveDaysThisMonth}</p>
-            <p className="text-xs text-slate-500 mt-1">zile</p>
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className={`rounded-2xl p-5 ${cardClass}`}>
+            <p className={`text-xs font-medium uppercase tracking-wider ${mutedTextClass}`}>Libere in luna selectata</p>
+            <p className={`mt-2 text-2xl sm:text-3xl font-bold ${primaryTextClass}`}>{leaveDaysThisMonth}</p>
+            <p className={`mt-1 text-xs ${mutedTextClass}`}>zile</p>
           </div>
-          <div className="rounded-2xl border border-sky-200 bg-white/80 p-5 shadow-sm text-slate-900">
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Libere in anul selectat ({selectedYear})</p>
-            <p className="mt-2 text-2xl sm:text-3xl font-bold text-orange-500">{leaveDaysThisYear}</p>
-            <p className="text-xs text-slate-500 mt-1">zile</p>
+          <div className={`rounded-2xl p-5 ${cardClass}`}>
+            <p className={`text-xs font-medium uppercase tracking-wider ${mutedTextClass}`}>Libere in anul selectat ({selectedYear})</p>
+            <p className={`mt-2 text-2xl sm:text-3xl font-bold ${secondaryTextClass}`}>{leaveDaysThisYear}</p>
+            <p className={`mt-1 text-xs ${mutedTextClass}`}>zile</p>
+          </div>
+          <div className={`rounded-2xl p-5 ${cardClass}`}>
+            <p className={`text-xs font-medium uppercase tracking-wider ${mutedTextClass}`}>Venituri incasate ({selectedYear})</p>
+            <p className="mt-2 text-2xl sm:text-3xl font-bold text-emerald-500">{paidIncomeThisYear.toFixed(0)} RON</p>
+            <p className={`mt-1 text-xs ${mutedTextClass}`}>{paidMonthsCountThisYear} luni marcate ca platite</p>
           </div>
         </div>
 
         {/* SPORT HISTORY */}
-        <div className="mb-8 rounded-2xl border border-sky-200 bg-white/80 p-5 shadow-sm text-slate-900">
+        <div className={`mb-8 rounded-2xl p-5 ${cardClass}`}>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-lg font-bold text-blue-600">Sport History</h3>
-              <p className="text-xs text-slate-500">Track how often you exercise and total effort.</p>
+              <h3 className={`text-lg font-bold ${primaryTextClass}`}>Sport History</h3>
+              <p className={`text-xs ${mutedTextClass}`}>Track how often you exercise and total effort.</p>
             </div>
             <button
               onClick={() => setIsSportModalOpen(true)}
@@ -1109,33 +1325,33 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
           </div>
 
           <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-sky-200 bg-sky-50 p-3">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Total sessions</p>
-              <p className="mt-1 text-2xl font-bold text-blue-600">{sportSessions.length}</p>
+            <div className={subtleCardClass}>
+              <p className={`text-xs uppercase tracking-wider ${mutedTextClass}`}>Total sessions</p>
+              <p className={`mt-1 text-2xl font-bold ${primaryTextClass}`}>{sportSessions.length}</p>
             </div>
-            <div className="rounded-xl border border-sky-200 bg-sky-50 p-3">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Total time</p>
-              <p className="mt-1 text-2xl font-bold text-blue-600">{totalSportMinutes} min</p>
+            <div className={subtleCardClass}>
+              <p className={`text-xs uppercase tracking-wider ${mutedTextClass}`}>Total time</p>
+              <p className={`mt-1 text-2xl font-bold ${primaryTextClass}`}>{totalSportMinutes} min</p>
             </div>
-            <div className="rounded-xl border border-sky-200 bg-sky-50 p-3">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Total hours</p>
-              <p className="mt-1 text-2xl font-bold text-blue-600">{totalSportHours.toFixed(1)} h</p>
+            <div className={subtleCardClass}>
+              <p className={`text-xs uppercase tracking-wider ${mutedTextClass}`}>Total hours</p>
+              <p className={`mt-1 text-2xl font-bold ${primaryTextClass}`}>{totalSportHours.toFixed(1)} h</p>
             </div>
           </div>
 
           <div className="space-y-2">
             {sportSessions.length === 0 ? (
-              <p className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-slate-500">
+              <p className={`rounded-lg p-3 text-sm ${subtleCardClass} ${mutedTextClass}`}>
                 No sport sessions logged yet.
               </p>
             ) : (
               sportSessions.slice(0, 8).map(session => (
-                <div key={session.id} className="flex items-center justify-between rounded-lg border border-sky-200 bg-white p-3 text-slate-900 shadow-sm">
+                <div key={session.id} className={`flex items-center justify-between rounded-lg p-3 shadow-sm ${subtleCardClass}`}>
                   <div>
-                    <p className="font-semibold text-slate-900">{session.activity}</p>
-                    <p className="text-xs text-slate-500">{session.date}{session.notes ? ` • ${session.notes}` : ''}</p>
+                    <p className="font-semibold">{session.activity}</p>
+                    <p className={`text-xs ${mutedTextClass}`}>{session.date}{session.notes ? ` • ${session.notes}` : ''}</p>
                   </div>
-                  <p className="text-sm font-bold text-blue-600">{session.duration_minutes} min</p>
+                  <p className={`text-sm font-bold ${primaryTextClass}`}>{session.duration_minutes} min</p>
                 </div>
               ))
             )}
@@ -1145,8 +1361,8 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
         {/* FIRMS LIST */}
         <div className="space-y-4">
           {firms.length === 0 ? (
-            <div className="text-center py-12 bg-gradient-to-br from-slate-900/40 to-slate-800/20 border border-slate-700/30 rounded-2xl">
-              <p className="text-slate-400 font-medium mb-4">No clients yet</p>
+            <div className={`rounded-2xl py-12 text-center ${emptyPanelClass}`}>
+              <p className={`mb-4 font-medium ${mutedTextClass}`}>No clients yet</p>
               <button 
                 onClick={() => setIsFirmModalOpen(true)}
                 className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-semibold text-sm transition-colors"
@@ -1159,27 +1375,62 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
               const firmEntries = monthEntries.filter(e => e.firm_id === f.id);
               const totalFirma = firmEntries.reduce((acc, e) => acc + e.total_amount, 0);
               const totalHoursFirm = firmEntries.reduce((acc, e) => acc + e.total_hours, 0);
+              const lockKey = getFirmMonthLockKey(f.id, viewDate);
+              const isMonthPaid = isFirmMonthPaid(f.id, viewDate);
+              const isSavingMonthPaid = Boolean(savingPaidMonthByFirm[lockKey]);
+              const isSwitchDisabled = isSavingMonthPaid || !invoiceStatusFeatureReady;
               return (
                 <div 
                   key={f.id} 
-                  className="bg-sky-100/35 backdrop-blur-sm border border-sky-200/80 rounded-2xl overflow-hidden hover:border-sky-300 transition-all shadow-sm"
+                  className={`overflow-hidden rounded-2xl border backdrop-blur-sm shadow-sm transition-all ${firmCardClass}`}
                 >
                   {/* FIRM HEADER */}
                   <button
                     onClick={() => setExpandedFirms(v => ({...v, [f.id]: !v[f.id]}))}
-                    className="w-full p-5 sm:p-6 flex items-center justify-between hover:bg-sky-200/35 transition-colors group text-slate-900"
+                    className={`group flex w-full items-center justify-between p-5 transition-colors sm:p-6 ${hoverSoftClass}`}
                   >
                     <div className="flex-1 text-left">
-                      <h3 className="font-bold text-base sm:text-lg text-slate-900 group-hover:text-blue-600 transition-colors">{f.name}</h3>
+                      <h3 className={`text-base sm:text-lg font-bold transition-colors ${primaryTextClass}`}>{f.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs bg-sky-200/70 text-blue-700 px-2 py-1 rounded font-medium">{f.rate} RON/H</span>
-                        <span className="text-xs text-slate-500">{firmEntries.length} entries</span>
+                        <span className={`rounded px-2 py-1 text-xs font-medium ${pillClass}`}>{f.rate} RON/H</span>
+                        <span className={`text-xs ${mutedTextClass}`}>{firmEntries.length} entries</span>
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className={`inline-flex items-center gap-2 rounded px-2 py-1 text-xs font-semibold ${isMonthPaid ? 'text-emerald-300' : mutedTextClass}`}
+                        >
+                          <span
+                            role="switch"
+                            aria-checked={isMonthPaid}
+                            aria-label={`Status plata ${f.name} pentru ${viewDate}`}
+                            tabIndex={isSwitchDisabled ? -1 : 0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isSwitchDisabled) return;
+                              toggleFirmMonthPaid(f.id, viewDate, !isMonthPaid);
+                            }}
+                            onKeyDown={(e) => {
+                              if (isSwitchDisabled) return;
+                              if (e.key !== 'Enter' && e.key !== ' ') return;
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFirmMonthPaid(f.id, viewDate, !isMonthPaid);
+                            }}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${isMonthPaid ? 'bg-green-500 shadow-[inset_0_0_0_1px_rgba(22,163,74,0.7)]' : 'bg-slate-400 shadow-[inset_0_0_0_1px_rgba(100,116,139,0.6)]'} ${isSavingMonthPaid ? 'cursor-wait opacity-70' : isSwitchDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer active:scale-[0.97]'}`}
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isMonthPaid ? 'translate-x-5' : 'translate-x-0.5'}`}
+                            />
+                          </span>
+                          <span>{!invoiceStatusFeatureReady ? 'Necesita migrare' : isSavingMonthPaid ? 'Se salveaza...' : isMonthPaid ? 'Platit' : 'Neplatit'}</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 sm:gap-4">
                       <div className="text-right">
-                        <p className="text-xl sm:text-2xl font-bold text-emerald-500">{totalFirma.toFixed(0)} <span className="text-xs text-slate-500">RON</span></p>
-                        <p className="text-xs text-slate-500">{totalHoursFirm.toFixed(1)}h</p>
+                        <p className="text-xl sm:text-2xl font-bold text-emerald-500">{totalFirma.toFixed(0)} <span className={`text-xs ${mutedTextClass}`}>RON</span></p>
+                        <p className={`text-xs ${mutedTextClass}`}>{totalHoursFirm.toFixed(1)}h</p>
                       </div>
                       <div className="flex items-center gap-2">
                         {firmEntries.length > 0 && (
@@ -1195,7 +1446,7 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                           <button onClick={(e) => { e.stopPropagation(); handleStartEditFirm(f); }} className="group p-2 text-orange-500 hover:text-orange-600 rounded-lg bg-orange-500/10 border border-orange-200/70" title="Edit client">
                             Edit
                           </button>
-                          <div className={`p-3 rounded-xl transition-transform ${ expandedFirms[f.id] ? 'bg-sky-200/70 text-blue-700' : 'text-slate-500' }`}>
+                          <div className={`p-3 rounded-xl transition-transform ${ expandedFirms[f.id] ? pillClass : mutedTextClass }`}>
                             <IconChevronDown className={`transform transition-transform ${expandedFirms[f.id] ? 'rotate-180' : ''}`} />
                           </div>
                         </div>
@@ -1205,39 +1456,41 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
 
                   {/* EXPANDED ENTRIES */}
                   {expandedFirms[f.id] && (
-                    <div className="border-t border-sky-200/80 px-5 sm:px-6 py-4 bg-white/65 space-y-3 max-h-96 overflow-y-auto text-slate-900">
+                    <div className={`max-h-96 space-y-3 overflow-y-auto border-t px-5 py-4 sm:px-6 ${isPaperTheme ? 'border-sky-200/80 bg-white/65 text-slate-900' : isSunsetTheme ? 'border-rose-900/60 bg-rose-950/20' : isOceanTheme ? 'border-cyan-900/60 bg-slate-950/20' : 'border-emerald-900/60 bg-emerald-950/20'}`}>
                       {firmEntries.length === 0 ? (
-                        <p className="text-center text-slate-500 py-6 text-sm">No entries for this period</p>
+                        <p className={`py-6 text-center text-sm ${mutedTextClass}`}>No entries for this period</p>
                       ) : (
                         firmEntries.map(e => (
                           <div 
                             key={e.id} 
-                            className="flex items-start justify-between gap-3 p-3 sm:p-4 bg-sky-50/80 border border-sky-200/80 rounded-lg hover:border-sky-300 transition-all group"
+                            className={`group flex items-start justify-between gap-3 rounded-lg p-3 transition-all sm:p-4 ${firmRowClass}`}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-bold text-blue-700 bg-sky-200/80 px-2 py-1 rounded">{e.date}</span>
+                                <span className={`rounded px-2 py-1 text-xs font-bold ${pillClass}`}>{e.date}</span>
                                 {e.total_amount > 0 && (
-                                  <span className="text-xs text-slate-500">{e.start_time} - {e.end_time}</span>
+                                  <span className={`text-xs ${mutedTextClass}`}>{e.start_time} - {e.end_time}</span>
                                 )}
                               </div>
-                              <p className="text-xs sm:text-sm text-slate-700 italic truncate">{e.description}</p>
+                              <p className={`truncate text-xs italic sm:text-sm ${isPaperTheme ? 'text-slate-700' : mutedTextClass}`}>{e.description}</p>
                               <div className="flex items-center gap-2 mt-2 text-xs">
-                                <span className="text-blue-700 font-semibold">{e.total_hours.toFixed(2)}h</span>
+                                <span className={`font-semibold ${primaryTextClass}`}>{e.total_hours.toFixed(2)}h</span>
                                 <span className="text-emerald-600 font-semibold">{e.total_amount.toFixed(0)} RON</span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => handleEditEntry(e)}
-                                className="group p-2 bg-white/80 hover:bg-sky-100 text-slate-700 rounded-lg transition-all border border-sky-200"
+                                disabled={isMonthPaid}
+                                className="group p-2 bg-white/80 hover:bg-sky-100 text-slate-700 rounded-lg transition-all border border-sky-200 disabled:opacity-40 disabled:cursor-not-allowed"
                                 title="Edit entry"
                               >
                                 Edit
                               </button>
                               <button 
-                                onClick={() => handleDeleteEntry(e.id)}
-                                className="group p-2 text-red-500/60 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all"
+                                onClick={() => handleDeleteEntry(e)}
+                                disabled={isMonthPaid}
+                                className="group p-2 text-red-500/60 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                 title="Delete entry"
                               >
                                 <IconTrash/>
@@ -1545,6 +1798,12 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                 </select>
               </div>
 
+              {isSelectedFirmMonthPaid && (
+                <div className={`rounded-lg p-3 text-sm ${isPaperTheme ? 'bg-amber-50 border border-amber-200 text-amber-700' : 'bg-amber-500/20 border border-amber-500/40 text-amber-200'}`}>
+                  Luna {selectedEntryMonthKey} este marcata ca platita pentru clientul selectat. Nu poti modifica activitatea pana nu debifezi statusul platit din lista clientilor.
+                </div>
+              )}
+
               {/* DATE SELECTION */}
               <div>
                 <label className={`block text-xs font-bold mb-2 uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : 'text-slate-300'}`}>Date</label>
@@ -1633,10 +1892,10 @@ export default function Dashboard({ userId, onSignOut }: DashboardProps) {
                 </button>
                 <button 
                   onClick={handleSaveEntry}
-                  disabled={isSavingEntry}
-                  className={`py-3 px-4 font-bold rounded-lg text-white transition-all ${activeTab === 'WORK' ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800' : 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800'} ${isSavingEntry ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  disabled={isSavingEntry || isSelectedFirmMonthPaid}
+                  className={`py-3 px-4 font-bold rounded-lg text-white transition-all ${activeTab === 'WORK' ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800' : 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800'} ${(isSavingEntry || isSelectedFirmMonthPaid) ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {isSavingEntry ? (selectedEntryId ? 'Updating...' : 'Saving...') : (selectedEntryId ? 'Update Entry' : 'Save Entry')}
+                  {isSavingEntry ? (selectedEntryId ? 'Updating...' : 'Saving...') : isSelectedFirmMonthPaid ? 'Luna este blocata' : (selectedEntryId ? 'Update Entry' : 'Save Entry')}
                 </button>
               </div>
             </div>

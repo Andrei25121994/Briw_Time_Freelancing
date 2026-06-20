@@ -18,6 +18,8 @@ export function AuthForm({ onSignIn, onSignUp, onVerifyCode }: AuthFormProps) {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasStartedEditing, setHasStartedEditing] = useState(false);
+  const authPanelKey = `${isSignUp ? 'signup' : 'signin'}-${signUpStep}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,10 +52,16 @@ export function AuthForm({ onSignIn, onSignUp, onVerifyCode }: AuthFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-sky-100 to-indigo-100 flex items-center justify-center p-4">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="auth-orb auth-orb-blue" />
+        <div className="auth-orb auth-orb-cyan" />
+        <div className="auth-orb auth-orb-indigo" />
+      </div>
+
+      <div key={authPanelKey} className={`auth-card bg-white/90 backdrop-blur rounded-2xl shadow-2xl border border-blue-100 p-8 w-full max-w-md relative z-10 ${hasStartedEditing ? '' : 'auth-card-idle-float'}`}>
         <div className="flex items-center justify-center mb-8">
-          <div className="bg-blue-600 p-3 rounded-full">
+          <div className="bg-blue-600 p-3 rounded-full shadow-lg shadow-blue-500/30">
             <Clock className="w-8 h-8 text-white" />
           </div>
         </div>
@@ -81,7 +89,12 @@ export function AuthForm({ onSignIn, onSignUp, onVerifyCode }: AuthFormProps) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          onFocusCapture={() => setHasStartedEditing(true)}
+          onPointerDownCapture={() => setHasStartedEditing(true)}
+          className="space-y-4"
+        >
           {!isSignUp && (
             <div>
               <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">

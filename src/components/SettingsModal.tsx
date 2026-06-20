@@ -119,6 +119,44 @@ export function SettingsModal({
 
   const t = useMemo(() => copy[language], [language]);
   const isPaperTheme = theme === 'paper';
+  const isOceanTheme = theme === 'ocean';
+  const isSunsetTheme = theme === 'sunset';
+
+  const darkShellClasses = isSunsetTheme
+    ? 'border border-rose-900/60 bg-gradient-to-br from-rose-950 via-orange-950 to-zinc-950 text-rose-50'
+    : isOceanTheme
+      ? 'border border-cyan-900/60 bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-950 text-cyan-50'
+      : 'border border-emerald-900/60 bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950 text-emerald-50';
+  const darkHeaderClasses = isSunsetTheme
+    ? 'border-b border-rose-900/60 bg-rose-950/80'
+    : isOceanTheme
+      ? 'border-b border-cyan-900/60 bg-slate-950/85'
+      : 'border-b border-emerald-900/60 bg-emerald-950/80';
+  const darkTitleClasses = isSunsetTheme
+    ? 'text-orange-300'
+    : isOceanTheme
+      ? 'text-cyan-300'
+      : 'text-emerald-300';
+  const darkPanelClasses = isSunsetTheme
+    ? 'border border-rose-900/50 bg-rose-950/35'
+    : isOceanTheme
+      ? 'border border-slate-700/40 bg-slate-900/40'
+      : 'border border-emerald-900/50 bg-emerald-950/25';
+  const darkPanelTitleClasses = isSunsetTheme
+    ? 'text-rose-200/90'
+    : isOceanTheme
+      ? 'text-slate-300'
+      : 'text-emerald-200/90';
+  const darkNeutralButtonClasses = isSunsetTheme
+    ? 'border border-rose-900/60 text-rose-200 hover:bg-rose-950/60'
+    : isOceanTheme
+      ? 'border border-slate-700 text-slate-300 hover:bg-slate-800/70'
+      : 'border border-emerald-900/60 text-emerald-200 hover:bg-emerald-950/50';
+  const darkInputClasses = isSunsetTheme
+    ? 'border border-rose-900/60 bg-rose-950/35 text-rose-50 placeholder-rose-300/50'
+    : isOceanTheme
+      ? 'border border-slate-700/50 bg-slate-800/50 text-white'
+      : 'border border-emerald-900/60 bg-emerald-950/25 text-emerald-50 placeholder-emerald-300/50';
 
   if (!isOpen) return null;
 
@@ -148,15 +186,15 @@ export function SettingsModal({
 
   return (
     <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-3 backdrop-blur-sm sm:p-4">
-      <div onClick={(e) => e.stopPropagation()} className={`my-auto w-full max-w-xl rounded-3xl shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${isPaperTheme ? 'border border-sky-200 bg-white/95 text-slate-900' : 'border border-slate-700/60 bg-gradient-to-br from-slate-900 to-slate-950 text-white'}`}>
-        <div className={`sticky top-0 z-10 flex items-center justify-between px-6 py-4 backdrop-blur ${isPaperTheme ? 'border-b border-sky-200 bg-white/90' : 'border-b border-slate-700/50 bg-slate-950/95'}`}>
-          <h2 className={`text-xl font-bold ${isPaperTheme ? 'text-blue-600' : 'text-cyan-300'}`}>{t.title}</h2>
-          <button onClick={onClose} className={`rounded-lg px-3 py-1.5 text-sm ${isPaperTheme ? 'border border-sky-200 text-slate-700 hover:bg-sky-100' : 'border border-slate-700 text-slate-300 hover:bg-slate-800/70'}`}>{t.close}</button>
+      <div onClick={(e) => e.stopPropagation()} className={`my-auto w-full max-w-xl rounded-3xl shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${isPaperTheme ? 'border border-sky-200 bg-white/95 text-slate-900' : darkShellClasses}`}>
+        <div className={`sticky top-0 z-10 flex items-center justify-between px-6 py-4 backdrop-blur ${isPaperTheme ? 'border-b border-sky-200 bg-white/90' : darkHeaderClasses}`}>
+          <h2 className={`text-xl font-bold ${isPaperTheme ? 'text-blue-600' : darkTitleClasses}`}>{t.title}</h2>
+          <button onClick={onClose} className={`rounded-lg px-3 py-1.5 text-sm ${isPaperTheme ? 'border border-sky-200 text-slate-700 hover:bg-sky-100' : darkNeutralButtonClasses}`}>{t.close}</button>
         </div>
 
         <div className="space-y-6 p-6">
-          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : 'border border-slate-700/40 bg-slate-900/40'}`}>
-            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : 'text-slate-400'}`}>{t.theme}</h3>
+          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : darkPanelClasses}`}>
+            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : darkPanelTitleClasses}`}>{t.theme}</h3>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <button onClick={() => onThemeChange('paper')} className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${theme === 'paper' ? 'border-sky-400 bg-sky-500/20 text-blue-700' : isPaperTheme ? 'border-sky-200 text-slate-700 hover:bg-sky-100' : 'border-slate-700 text-slate-300 hover:bg-slate-800/70'}`}>White paper</button>
               <button onClick={() => onThemeChange('ocean')} className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${theme === 'ocean' ? 'border-cyan-400 bg-cyan-500/20 text-cyan-200' : isPaperTheme ? 'border-sky-200 text-slate-700 hover:bg-sky-100' : 'border-slate-700 text-slate-300 hover:bg-slate-800/70'}`}>Ocean</button>
@@ -164,18 +202,18 @@ export function SettingsModal({
             </div>
             <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
               <button onClick={() => onThemeChange('forest')} className={`rounded-lg border px-3 py-2 text-sm font-semibold transition ${theme === 'forest' ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200' : isPaperTheme ? 'border-sky-200 text-slate-700 hover:bg-sky-100' : 'border-slate-700 text-slate-300 hover:bg-slate-800/70'}`}>Forest</button>
-              <div className={`rounded-lg px-3 py-2 text-xs ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-600' : 'border border-sky-300/30 bg-sky-500/5 text-slate-300'}`}>
+              <div className={`rounded-lg px-3 py-2 text-xs ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-600' : darkNeutralButtonClasses}`}>
                 Accents stay blue and orange for action buttons.
               </div>
             </div>
           </section>
 
-          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : 'border border-slate-700/40 bg-slate-900/40'}`}>
-            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : 'text-slate-400'}`}>{t.language}</h3>
+          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : darkPanelClasses}`}>
+            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : darkPanelTitleClasses}`}>{t.language}</h3>
             <select
               value={language}
               onChange={(e) => onLanguageChange(e.target.value as AppLanguage)}
-              className={`w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-800' : 'border border-slate-700/50 bg-slate-800/50 text-white'}`}
+              className={`w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-800' : darkInputClasses}`}
             >
               <option value="ro">Romana</option>
               <option value="en">English</option>
@@ -183,28 +221,28 @@ export function SettingsModal({
               <option value="de">Deutsch</option>
             </select>
 
-            <label className={`mt-4 flex items-center justify-between rounded-lg px-3 py-2 ${isPaperTheme ? 'border border-sky-200 bg-white' : 'border border-slate-700/40 bg-slate-800/40'}`}>
-              <span className={`text-sm ${isPaperTheme ? 'text-slate-700' : 'text-slate-200'}`}>{t.notifications}</span>
+            <label className={`mt-4 flex items-center justify-between rounded-lg px-3 py-2 ${isPaperTheme ? 'border border-sky-200 bg-white' : darkInputClasses}`}>
+              <span className={`text-sm ${isPaperTheme ? 'text-slate-700' : darkPanelTitleClasses}`}>{t.notifications}</span>
               <input type="checkbox" checked={notificationsEnabled} onChange={(e) => onNotificationsToggle(e.target.checked)} className="h-4 w-4" />
             </label>
           </section>
 
-          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : 'border border-slate-700/40 bg-slate-900/40'}`}>
-            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : 'text-slate-400'}`}>{t.password}</h3>
+          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : darkPanelClasses}`}>
+            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : darkPanelTitleClasses}`}>{t.password}</h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder={t.newPassword}
-                className={`rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-800 placeholder-slate-400' : 'border border-slate-700/50 bg-slate-800/50 text-white'}`}
+                className={`rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-800 placeholder-slate-400' : darkInputClasses}`}
               />
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder={t.confirmPassword}
-                className={`rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-800 placeholder-slate-400' : 'border border-slate-700/50 bg-slate-800/50 text-white'}`}
+                className={`rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500 ${isPaperTheme ? 'border border-sky-200 bg-white text-slate-800 placeholder-slate-400' : darkInputClasses}`}
               />
             </div>
             <button
@@ -214,13 +252,13 @@ export function SettingsModal({
             >
               {isSavingPassword ? t.processing : t.savePassword}
             </button>
-            {feedback && <p className={`mt-2 text-sm ${isPaperTheme ? 'text-slate-600' : 'text-slate-300'}`}>{feedback}</p>}
+            {feedback && <p className={`mt-2 text-sm ${isPaperTheme ? 'text-slate-600' : darkPanelTitleClasses}`}>{feedback}</p>}
           </section>
 
-          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : 'border border-slate-700/40 bg-slate-900/40'}`}>
-            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : 'text-slate-400'}`}>{t.data}</h3>
+          <section className={`rounded-xl p-4 ${isPaperTheme ? 'border border-sky-200 bg-sky-50/70' : darkPanelClasses}`}>
+            <h3 className={`mb-3 text-xs font-bold uppercase tracking-wider ${isPaperTheme ? 'text-slate-600' : darkPanelTitleClasses}`}>{t.data}</h3>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <button onClick={onExportBackup} className={`rounded-lg px-3 py-2 text-sm font-semibold ${isPaperTheme ? 'border border-sky-200 text-blue-700 bg-white hover:bg-sky-100' : 'border border-slate-700 text-slate-200 hover:bg-slate-800/70'}`}>{t.export}</button>
+              <button onClick={onExportBackup} className={`rounded-lg px-3 py-2 text-sm font-semibold ${isPaperTheme ? 'border border-sky-200 text-blue-700 bg-white hover:bg-sky-100' : darkNeutralButtonClasses}`}>{t.export}</button>
               <button onClick={onClearSportSessions} className={`rounded-lg px-3 py-2 text-sm font-semibold ${isPaperTheme ? 'border border-orange-200 text-orange-600 bg-white hover:bg-orange-50' : 'border border-orange-700/70 text-orange-300 hover:bg-orange-500/10'}`}>{t.clearSport}</button>
             </div>
             <button

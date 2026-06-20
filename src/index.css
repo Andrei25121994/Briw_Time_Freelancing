@@ -35,9 +35,9 @@
 
   body.theme-forest {
     background:
-      radial-gradient(circle at top left, rgba(125, 211, 252, 0.18), transparent 22%),
-      radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 30%),
-      linear-gradient(160deg, #04111a 0%, #071b2d 40%, #061724 100%);
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.22), transparent 24%),
+      radial-gradient(circle at bottom right, rgba(132, 204, 22, 0.16), transparent 30%),
+      linear-gradient(160deg, #03130d 0%, #062018 40%, #041611 100%);
     color: #f8fafc;
   }
 
@@ -123,6 +123,37 @@
   }
 }
 
+@keyframes authFloatA {
+  0% { transform: translate3d(-10%, -5%, 0) scale(1); }
+  50% { transform: translate3d(5%, 8%, 0) scale(1.08); }
+  100% { transform: translate3d(-10%, -5%, 0) scale(1); }
+}
+
+@keyframes authFloatB {
+  0% { transform: translate3d(8%, -8%, 0) scale(1); }
+  50% { transform: translate3d(-6%, 6%, 0) scale(1.1); }
+  100% { transform: translate3d(8%, -8%, 0) scale(1); }
+}
+
+@keyframes authCardEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes authIdleFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
 @layer utilities {
   .icon-hover {
     @apply transition-transform duration-200 ease-out will-change-transform;
@@ -138,5 +169,48 @@
 
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
+  }
+
+  .auth-card {
+    animation: authCardEnter 0.45s ease-out;
+  }
+
+  .auth-card-idle-float {
+    animation: authCardEnter 0.45s ease-out, authIdleFloat 3.4s ease-in-out 0.5s infinite;
+  }
+
+  .auth-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(30px);
+    opacity: 0.5;
+    will-change: transform;
+  }
+
+  .auth-orb-blue {
+    width: 320px;
+    height: 320px;
+    top: -80px;
+    left: -70px;
+    background: radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.55), rgba(59, 130, 246, 0));
+    animation: authFloatA 8s ease-in-out infinite;
+  }
+
+  .auth-orb-cyan {
+    width: 260px;
+    height: 260px;
+    right: -60px;
+    top: 20%;
+    background: radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.45), rgba(34, 211, 238, 0));
+    animation: authFloatB 9s ease-in-out infinite;
+  }
+
+  .auth-orb-indigo {
+    width: 300px;
+    height: 300px;
+    bottom: -100px;
+    left: 28%;
+    background: radial-gradient(circle at 40% 40%, rgba(99, 102, 241, 0.35), rgba(99, 102, 241, 0));
+    animation: authFloatA 11s ease-in-out infinite;
   }
 }
