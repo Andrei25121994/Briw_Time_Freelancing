@@ -147,8 +147,8 @@ export function SettingsModal({
   };
 
   return (
-    <div onClick={onClose} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div onClick={(e) => e.stopPropagation()} className={`w-full max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto ${isPaperTheme ? 'border border-sky-200 bg-white/95 text-slate-900' : 'border border-slate-700/60 bg-gradient-to-br from-slate-900 to-slate-950 text-white'}`}>
+    <div onClick={onClose} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-3 backdrop-blur-sm sm:p-4">
+      <div onClick={(e) => e.stopPropagation()} className={`my-auto w-full max-w-xl rounded-3xl shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${isPaperTheme ? 'border border-sky-200 bg-white/95 text-slate-900' : 'border border-slate-700/60 bg-gradient-to-br from-slate-900 to-slate-950 text-white'}`}>
         <div className={`sticky top-0 z-10 flex items-center justify-between px-6 py-4 backdrop-blur ${isPaperTheme ? 'border-b border-sky-200 bg-white/90' : 'border-b border-slate-700/50 bg-slate-950/95'}`}>
           <h2 className={`text-xl font-bold ${isPaperTheme ? 'text-blue-600' : 'text-cyan-300'}`}>{t.title}</h2>
           <button onClick={onClose} className={`rounded-lg px-3 py-1.5 text-sm ${isPaperTheme ? 'border border-sky-200 text-slate-700 hover:bg-sky-100' : 'border border-slate-700 text-slate-300 hover:bg-slate-800/70'}`}>{t.close}</button>

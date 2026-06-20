@@ -2,6 +2,22 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
+const clearSupabaseAuthStorage = () => {
+  const storageScopes = [window.localStorage, window.sessionStorage];
+
+  for (const storage of storageScopes) {
+    const keysToRemove: string[] = [];
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (key && key.startsWith('sb-') && key.includes('-auth-token')) {
+        keysToRemove.push(key);
+      }
+    }
+
+    keysToRemove.forEach((key) => storage.removeItem(key));
+  }
+};
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +90,10 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    clearSupabaseAuthStorage();
+    setUser(null);
+    setLoading(false);
     if (error) throw error;
   };
 

@@ -63,9 +63,10 @@ const shiftMonthKey = (monthKey: string, delta: number) => {
 
 interface DashboardProps {
   userId: string;
+  onSignOut: () => Promise<void>;
 }
 
-export default function Dashboard({ userId }: DashboardProps) {
+export default function Dashboard({ userId, onSignOut }: DashboardProps) {
   const [firms, setFirms] = useState<any[]>([]);
   const [entries, setEntries] = useState<any[]>([]);
   const [visibleEntries, setVisibleEntries] = useState<any[]>([]);
@@ -120,6 +121,7 @@ export default function Dashboard({ userId }: DashboardProps) {
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [sportLoaded, setSportLoaded] = useState(false);
   const [isHeaderSigningOut, setIsHeaderSigningOut] = useState(false);
+  const [ownershipClaimed, setOwnershipClaimed] = useState(false);
   const isPaperTheme = appTheme === 'paper';
 
   const leaveTypes = ['VACATION', 'MEDICAL LEAVE', 'UNPAID LEAVE', 'STUDY LEAVE', 'MATERNITY LEAVE'];
@@ -150,14 +152,14 @@ export default function Dashboard({ userId }: DashboardProps) {
       .channel(`dashboard-realtime-${userId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'timesheet_entries' },
+        { event: '*', schema: 'public', table: 'timesheet_entries', filter: `user_id=eq.${userId}` },
         () => {
           fetchData();
         }
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'firms' },
+        { event: '*', schema: 'public', table: 'firms', filter: `user_id=eq.${userId}` },
         () => {
           fetchData();
         }
@@ -368,17 +370,36 @@ export default function Dashboard({ userId }: DashboardProps) {
     })();
   };
 
-  const signOut = async () => {
-    const { error: signOutError } = await supabase.auth.signOut();
-    if (signOutError) throw signOutError;
-  };
+  async function claimLegacyData() {
+    if (!userId || ownershipClaimed) return;
+
+    const { error: claimEntriesError } = await (supabase.from('timesheet_entries') as any)
+      .update({ user_id: userId })
+      .is('user_id', null);
+
+    if (claimEntriesError) {
+      console.error('Error claiming legacy timesheet entries:', claimEntriesError);
+    }
+
+    const { error: claimFirmsError } = await (supabase.from('firms') as any)
+      .update({ user_id: userId })
+      .is('user_id', null);
+
+    if (claimFirmsError) {
+      console.error('Error claiming legacy firms:', claimFirmsError);
+    }
+
+    setOwnershipClaimed(true);
+  }
 
   async function fetchMonthEntries(monthKey: string = viewDate) {
+    if (!userId) return;
     try {
       const fromDate = `${monthKey}-01`;
       const toDate = `${shiftMonthKey(monthKey, 1)}-01`;
       const { data, error: monthError } = await (supabase.from('timesheet_entries') as any)
         .select('*')
+        .eq('user_id', userId)
         .gte('date', fromDate)
         .lt('date', toDate)
         .order('date', { ascending: false });
@@ -395,15 +416,24 @@ export default function Dashboard({ userId }: DashboardProps) {
   }
 
   async function fetchData() {
+    if (!userId) return;
     setLoading(true);
     setError(null);
     try {
-      const { data: fData, error: fError } = await (supabase.from('firms') as any).select('*').order('name');
+      await claimLegacyData();
+
+      const { data: fData, error: fError } = await (supabase.from('firms') as any)
+        .select('*')
+        .eq('user_id', userId)
+        .order('name');
       if (fError) {
         console.error('Error fetching firms:', fError);
         setError(`Eroare la încărcarea clienților: ${fError.message || JSON.stringify(fError)}`);
       }
-      const { data: eData, error: eError } = await (supabase.from('timesheet_entries') as any).select('*').order('date', { ascending: false });
+      const { data: eData, error: eError } = await (supabase.from('timesheet_entries') as any)
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
       if (eError) {
         console.error('Error fetching entries:', eError);
         setError(`Eroare la încărcarea intrărilor: ${eError.message || JSON.stringify(eError)}`);
@@ -426,7 +456,7 @@ export default function Dashboard({ userId }: DashboardProps) {
     setIsSavingFirm(true);
     try {
       const { data, error: insertError } = await (supabase.from('firms') as any).insert([
-        { name: fName.toUpperCase().trim(), rate: Number(fRate) }
+        { name: fName.toUpperCase().trim(), rate: Number(fRate), user_id: userId }
       ]).select();
       
       setIsSavingFirm(false);
@@ -499,7 +529,7 @@ export default function Dashboard({ userId }: DashboardProps) {
   const handleDeleteEntry = async (id: string) => {
     const confirmed = confirm('Ștergi această înregistrare?');
     if (!confirmed) return;
-    await (supabase.from('timesheet_entries') as any).delete().eq('id', id);
+    await (supabase.from('timesheet_entries') as any).delete().eq('id', id).eq('user_id', userId);
     fetchData();
   };
 
@@ -515,8 +545,8 @@ export default function Dashboard({ userId }: DashboardProps) {
     setIsSavingFirm(true);
     setError(null);
     try {
-      const { data: oldFirm } = await (supabase.from('firms') as any).select('*').eq('id', editingFirmId).single();
-      const { error: updErr } = await (supabase.from('firms') as any).update({ name: fName.toUpperCase().trim(), rate: Number(fRate) }).eq('id', editingFirmId);
+      const { data: oldFirm } = await (supabase.from('firms') as any).select('*').eq('id', editingFirmId).eq('user_id', userId).single();
+      const { error: updErr } = await (supabase.from('firms') as any).update({ name: fName.toUpperCase().trim(), rate: Number(fRate) }).eq('id', editingFirmId).eq('user_id', userId);
       if (updErr) {
         setError(`Eroare: ${updErr.message}`);
         alert(`Eroare: ${updErr.message}`);
@@ -567,6 +597,7 @@ export default function Dashboard({ userId }: DashboardProps) {
     const hours = activeTab === 'WORK' ? diff / 60 : 8;
     const amount = activeTab === 'WORK' ? (diff / 60) * firm.rate : 0;
     const entryData = {
+      user_id: userId,
       firm_id: selectedFirmId,
       date,
       start_time: activeTab === 'WORK' ? startTime : '00:00',
@@ -707,6 +738,7 @@ export default function Dashboard({ userId }: DashboardProps) {
         // Add entry for each client
         for (const firm of firms) {
           entriesToInsert.push({
+            user_id: userId,
             firm_id: firm.id,
             date: dateStr,
             start_time: '00:00',
@@ -794,92 +826,6 @@ export default function Dashboard({ userId }: DashboardProps) {
     return `${hh}:${mm}:${ss}`;
   };
 
-  // PDF ACTUALIZAT CU PRESTATOR/BENEFICIAR JOS
-  const generatePDF = (firm: any) => {
-    const firmEntries = entries.filter(e => e.firm_id === firm.id && isEntryInMonth(e.date, viewDate));
-    if (firmEntries.length === 0) return alert('No records found for this period.');
-
-    const formatDate = (value: string) => new Date(value).toLocaleDateString('en-GB');
-    const nowText = new Date().toLocaleString('en-GB');
-    const totalAmount = firmEntries.reduce((acc, e) => acc + e.total_amount, 0);
-    const totalHours = firmEntries.reduce((acc, e) => acc + e.total_hours, 0);
-    const blueColor = [25, 118, 210];
-    const doc = new jsPDF('p', 'mm', 'a4');
-
-    doc.setFillColor(...blueColor);
-    doc.rect(0, 0, 210, 22, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('TIMESHEET REPORT', 15, 14);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text(`Period: ${viewDate}`, 15, 20);
-    doc.text(`Generated: ${nowText}`, 140, 20);
-
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('Provider: BRIW DESIGN SRL', 15, 28);
-    doc.text(`Client: ${firm.name}`, 110, 28);
-
-    autoTable(doc, {
-      startY: 34,
-      head: [[
-        { content: 'Date', styles: { halign: 'center' } },
-        { content: 'Location', styles: { halign: 'center' } },
-        { content: 'Time Range', styles: { halign: 'center' } },
-        { content: 'Time/Day', styles: { halign: 'center' } },
-        { content: 'Comments', styles: { halign: 'center' } }
-      ]],
-      body: firmEntries.map((entry: any) => {
-        const match = (entry.description || '').match(/^\[([^\]]+)\]\s*(.*)$/);
-        const location = match?.[1] === 'BIROU' ? 'Office' : match?.[1] === 'HOME' ? 'Home' : match?.[1] || '';
-        const comments = match?.[2] || entry.description || '';
-        return [
-          formatDate(entry.date),
-          location,
-          entry.total_amount > 0 ? `${entry.start_time} - ${entry.end_time}` : 'Leave',
-          entry.total_hours.toFixed(2),
-          comments
-        ];
-      }),
-      headStyles: { fillColor: blueColor, textColor: 255, fontStyle: 'bold' },
-      styles: { fontSize: 9, cellPadding: 3 },
-      alternateRowStyles: { fillColor: [245, 247, 250] },
-      margin: { left: 15, right: 15 },
-      columnStyles: {
-        0: { cellWidth: 24 },
-        1: { cellWidth: 26 },
-        2: { cellWidth: 34 },
-        3: { cellWidth: 24, halign: 'center' },
-        4: { cellWidth: 66 }
-      }
-    });
-
-    let finalY = (doc as any).lastAutoTable.finalY + 10;
-    if (finalY > 240) {
-      doc.addPage();
-      finalY = 20;
-    }
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text('Total amount:', 15, finalY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${totalAmount.toFixed(0)} RON`, 55, finalY);
-
-    const footerY = finalY + 25;
-    doc.setDrawColor(150, 150, 150);
-    doc.line(15, footerY, 85, footerY);
-    doc.line(125, footerY, 195, footerY);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Provider signature', 15, footerY + 6);
-    doc.text('Client signature', 125, footerY + 6);
-
-    doc.save(`Timesheet_${firm.name}_${viewDate}.pdf`);
-  };
-
   const generatePDFRange = async (firmId: string, from: string, to: string) => {
     const firm = firms.find(f => f.id === firmId);
     if (!firm) return alert('Client does not exist.');
@@ -896,7 +842,7 @@ export default function Dashboard({ userId }: DashboardProps) {
     const nowText = new Date().toLocaleString('en-GB');
     const totalAmount = firmEntries.reduce((acc, e) => acc + e.total_amount, 0);
     const doc = new jsPDF('p', 'mm', 'a4');
-    const blueColor = [25, 118, 210];
+    const blueColor: [number, number, number] = [25, 118, 210];
 
     doc.setFillColor(...blueColor);
     doc.rect(0, 0, 210, 20, 'F');
@@ -1063,7 +1009,7 @@ export default function Dashboard({ userId }: DashboardProps) {
                   if (isHeaderSigningOut) return;
                   setIsHeaderSigningOut(true);
                   try {
-                    await signOut();
+                    await onSignOut();
                   } finally {
                     setIsHeaderSigningOut(false);
                   }
@@ -1343,8 +1289,8 @@ export default function Dashboard({ userId }: DashboardProps) {
 
       {/* LEAVE REQUEST MODAL */}
       {isLeaveModalOpen && (
-        <div onClick={() => setIsLeaveModalOpen(false)} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div onClick={(e) => e.stopPropagation()} className={`w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto ${isPaperTheme ? 'bg-white/95 border border-sky-200 text-slate-900' : 'bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-700/50 text-white'}`}>
+        <div onClick={() => setIsLeaveModalOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div onClick={(e) => e.stopPropagation()} className={`my-auto w-full max-w-md rounded-3xl shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${isPaperTheme ? 'bg-white/95 border border-sky-200 text-slate-900' : 'bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-700/50 text-white'}`}>
             <div className={`sticky top-0 px-6 py-4 flex items-center justify-between ${isPaperTheme ? 'bg-white/90 border-b border-sky-200' : 'bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-700/50'}`}>
               <h2 className={`text-lg sm:text-2xl font-bold ${isPaperTheme ? 'text-blue-600' : 'bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent'}`}>Leave Request</h2>
               <button onClick={() => setIsLeaveModalOpen(false)} className={`group p-2 rounded ${isPaperTheme ? 'hover:bg-sky-100 text-slate-700' : 'hover:bg-slate-800'}`}><IconX/></button>
@@ -1408,8 +1354,8 @@ export default function Dashboard({ userId }: DashboardProps) {
 
       {/* SPORT MODAL */}
       {isSportModalOpen && (
-        <div onClick={() => setIsSportModalOpen(false)} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-t-3xl border border-slate-700/50 bg-gradient-to-br from-slate-900 to-slate-950 shadow-2xl sm:rounded-3xl">
+        <div onClick={() => setIsSportModalOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div onClick={(e) => e.stopPropagation()} className="my-auto w-full max-w-md rounded-3xl border border-slate-700/50 bg-gradient-to-br from-slate-900 to-slate-950 shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto sm:rounded-3xl">
             <div className="flex items-center justify-between border-b border-slate-700/50 px-6 py-4">
               <h3 className="text-lg font-bold text-cyan-300">Add Sport Session</h3>
               <button onClick={() => setIsSportModalOpen(false)} className="group rounded p-2 hover:bg-slate-800"><IconX /></button>
@@ -1514,8 +1460,8 @@ export default function Dashboard({ userId }: DashboardProps) {
 
       {/* PDF MODAL */}
       {isPdfModalOpen && (
-        <div onClick={() => setIsPdfModalOpen(false)} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div onClick={(e) => e.stopPropagation()} className="bg-gradient-to-br from-slate-900 to-slate-950 w-full max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-700/50 shadow-2xl">
+        <div onClick={() => setIsPdfModalOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div onClick={(e) => e.stopPropagation()} className="bg-gradient-to-br from-slate-900 to-slate-950 my-auto w-full max-w-md rounded-3xl sm:rounded-3xl border border-slate-700/50 shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto">
             <div className="px-6 py-4 flex items-center justify-between border-b border-slate-700/50">
               <h3 className="text-lg font-bold">Generate PDF Report</h3>
               <button onClick={() => setIsPdfModalOpen(false)} className="group p-2 rounded hover:bg-slate-800"><IconX/></button>
@@ -1549,8 +1495,8 @@ export default function Dashboard({ userId }: DashboardProps) {
 
       {/* MODAL PONTAJ - IMPROVED */}
       {isEntryModalOpen && (
-        <div onClick={() => setIsEntryModalOpen(false)} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div onClick={(e) => e.stopPropagation()} className={`w-full max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto ${isPaperTheme ? 'bg-white/95 border border-sky-200 text-slate-900' : 'bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-700/50 text-white'}`}>
+        <div onClick={() => setIsEntryModalOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+          <div onClick={(e) => e.stopPropagation()} className={`my-auto w-full max-w-2xl rounded-3xl sm:rounded-3xl shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${isPaperTheme ? 'bg-white/95 border border-sky-200 text-slate-900' : 'bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-700/50 text-white'}`}>
             {/* MODAL HEADER */}
             <div className={`sticky top-0 px-5 sm:px-8 py-5 sm:py-6 flex items-center justify-between ${isPaperTheme ? 'bg-white/90 border-b border-sky-200' : 'bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-700/50'}`}>
               <h2 className={`text-lg sm:text-2xl font-bold ${isPaperTheme ? 'text-blue-600' : 'bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'}`}>{selectedEntryId ? 'Update Entry' : 'Add Entry'}</h2>
@@ -1700,11 +1646,11 @@ export default function Dashboard({ userId }: DashboardProps) {
 
       {/* MODAL CLIENT - IMPROVED */}
       {isFirmModalOpen && (
-        <div onClick={() => setIsFirmModalOpen(false)} className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div onClick={(e) => e.stopPropagation()} className={`w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl ${isPaperTheme ? 'bg-white/95 border border-sky-200 text-slate-900' : 'bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-700/50 text-white'}`}>
+        <div onClick={() => setIsFirmModalOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4">
+          <div onClick={(e) => e.stopPropagation()} className={`my-auto w-full max-w-md rounded-3xl sm:rounded-3xl shadow-2xl max-h-[calc(100dvh-1.5rem)] overflow-y-auto ${isPaperTheme ? 'bg-white/95 border border-sky-200 text-slate-900' : 'bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-700/50 text-white'}`}>
             {/* MODAL HEADER */}
             <div className={`px-6 sm:px-8 py-5 sm:py-6 flex items-center justify-between ${isPaperTheme ? 'bg-white/90 border-b border-sky-200' : 'bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-700/50'}`}>
-              <h2 className={`text-lg sm:text-2xl font-bold ${isPaperTheme ? 'text-blue-600' : 'bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'}`}>Add Client</h2>
+              <h2 className={`text-lg sm:text-2xl font-bold ${isPaperTheme ? 'text-blue-600' : 'bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent'}`}>{editingFirmId ? 'Edit Client' : 'Add Client'}</h2>
               <button 
                 onClick={() => setIsFirmModalOpen(false)}
                 className={`group p-2 rounded-lg transition-colors ${isPaperTheme ? 'hover:bg-sky-100 text-slate-700' : 'hover:bg-slate-800'}`}
@@ -1753,13 +1699,13 @@ export default function Dashboard({ userId }: DashboardProps) {
                   Cancel
                 </button>
                 <button 
-                  onClick={handleSaveFirm}
+                  onClick={editingFirmId ? handleUpdateFirm : handleSaveFirm}
                   disabled={isSavingFirm || !fName.trim() || fRate <= 0}
                   className={`py-3 px-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold rounded-lg transition-all ${
                     isSavingFirm || !fName.trim() || fRate <= 0 ? 'opacity-70 cursor-not-allowed' : ''
                   }`}
                 >
-                  {isSavingFirm ? 'Adding...' : 'Add Client'}
+                  {isSavingFirm ? (editingFirmId ? 'Updating...' : 'Adding...') : (editingFirmId ? 'Update Client' : 'Add Client')}
                 </button>
               </div>
             </div>
@@ -1779,7 +1725,7 @@ export default function Dashboard({ userId }: DashboardProps) {
         onChangePassword={changePassword}
         onExportBackup={exportBackup}
         onClearSportSessions={clearSportHistory}
-        onSignOut={signOut}
+        onSignOut={onSignOut}
       />
     </div>
   );

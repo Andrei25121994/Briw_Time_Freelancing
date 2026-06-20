@@ -3,7 +3,7 @@ import { AuthForm } from './components/AuthForm';
 import { useAuth } from './hooks/useAuth';
 
 function App() {
-  const { user, loading, signIn, signUp, verifySignUpCode } = useAuth();
+  const { user, loading, signIn, signUp, verifySignUpCode, signOut } = useAuth();
 
   if (loading) {
     return (
@@ -20,7 +20,7 @@ function App() {
   return (
     <div className="App">
       <main className="min-h-screen bg-transparent">
-        <Dashboard userId={user.id} />
+        <Dashboard userId={user.id} onSignOut={signOut} />
       </main>
     </div>
   );
