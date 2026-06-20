@@ -21,12 +21,54 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+  const signUp = async (email: string, password: string, username: string) => {
+    const cleanUsername = username.trim().toLowerCase();
+    if (cleanUsername.length < 3) {
+      throw new Error('Username-ul trebuie sa aiba minim 3 caractere.');
+    }
+
+    const { error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: {
+        data: {
+          username: cleanUsername,
+        },
+      },
+    });
     if (error) throw error;
   };
 
-  const signIn = async (email: string, password: string) => {
+  const verifySignUpCode = async (email: string, code: string) => {
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: code.trim(),
+      type: 'signup',
+    });
+    if (error) throw error;
+  };
+
+  const resolveEmailFromIdentifier = async (identifier: string) => {
+    const normalized = identifier.trim().toLowerCase();
+    if (normalized.includes('@')) return normalized;
+
+    const { data, error } = await (supabase.rpc('get_email_for_login', {
+      input_username: normalized,
+    }) as any);
+
+    if (error) {
+      throw new Error('Login-ul cu username necesita migrarea din Supabase. Foloseste email-ul sau aplica SQL-ul nou.');
+    }
+
+    if (!data) {
+      throw new Error('Username inexistent. Verifica username-ul sau foloseste email-ul.');
+    }
+
+    return String(data).toLowerCase();
+  };
+
+  const signIn = async (identifier: string, password: string) => {
+    const email = await resolveEmailFromIdentifier(identifier);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
@@ -36,5 +78,5 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  return { user, loading, signUp, signIn, signOut };
+  return { user, loading, signUp, verifySignUpCode, signIn, signOut };
 }

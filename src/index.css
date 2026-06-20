@@ -1,3 +1,142 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white;
+    padding-bottom: env(safe-area-inset-bottom, 2rem);
+  }
+
+  body.theme-paper {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    color: #0f172a;
+  }
+
+  body.theme-ocean {
+    background:
+      radial-gradient(circle at top left, rgba(125, 211, 252, 0.18), transparent 22%),
+      radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 30%),
+      linear-gradient(160deg, #020617 0%, #061324 40%, #081530 100%);
+    color: #ffffff;
+  }
+
+  body.theme-sunset {
+    background:
+      radial-gradient(circle at top left, rgba(251, 146, 60, 0.22), transparent 24%),
+      radial-gradient(circle at bottom right, rgba(244, 63, 94, 0.18), transparent 30%),
+      linear-gradient(160deg, #1a0d0f 0%, #28121c 40%, #130d12 100%);
+    color: #f8fafc;
+  }
+
+  body.theme-forest {
+    background:
+      radial-gradient(circle at top left, rgba(125, 211, 252, 0.18), transparent 22%),
+      radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.14), transparent 30%),
+      linear-gradient(160deg, #04111a 0%, #071b2d 40%, #061724 100%);
+    color: #f8fafc;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* Smooth scrolling for mobile */
+  @media (max-width: 640px) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900/20;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-blue-500/40 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-blue-500/60;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-lg transition-all transform hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-lg transition-all;
+  }
+
+  .card {
+    @apply bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-slate-700/30 rounded-2xl hover:border-blue-500/20 transition-all;
+  }
+
+  .input-field {
+    @apply w-full bg-slate-800/40 hover:bg-slate-800/60 border border-slate-700/50 text-white px-4 py-3 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all;
+  }
+}
+
+/* Mobile-first responsive optimizations */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    @apply pb-32;
+  }
+
+  /* Prevent zoom on input focus for iOS */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Better touch targets */
+  button {
+    @apply min-h-[44px];
+  }
+}
+
+/* Smooth animations */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .icon-hover {
+    @apply transition-transform duration-200 ease-out will-change-transform;
+  }
+
+  .group:hover .icon-hover {
+    transform: translateY(-1px) scale(1.08) rotate(4deg);
+  }
+
+  .group:active .icon-hover {
+    transform: translateY(0) scale(0.98) rotate(0deg);
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
