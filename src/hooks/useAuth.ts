@@ -66,6 +66,20 @@ export function useAuth() {
     if (error) throw error;
   };
 
+  const resendSignUpCode = async (email: string) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) throw new Error('Introdu adresa de email.');
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: authRedirectUrl,
+      },
+    });
+    if (error) throw error;
+  };
+
   const resolveEmailFromIdentifier = async (identifier: string) => {
     const normalized = identifier.trim().toLowerCase();
     if (normalized.includes('@')) return normalized;
@@ -99,5 +113,5 @@ export function useAuth() {
     if (error) throw error;
   };
 
-  return { user, loading, signUp, verifySignUpCode, signIn, signOut };
+  return { user, loading, signUp, verifySignUpCode, resendSignUpCode, signIn, signOut };
 }

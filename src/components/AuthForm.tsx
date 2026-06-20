@@ -5,9 +5,10 @@ interface AuthFormProps {
   onSignIn: (identifier: string, password: string) => Promise<void>;
   onSignUp: (email: string, password: string, username: string) => Promise<void>;
   onVerifyCode: (email: string, code: string) => Promise<void>;
+  onResendSignUpCode: (email: string) => Promise<void>;
 }
 
-export function AuthForm({ onSignIn, onSignUp, onVerifyCode }: AuthFormProps) {
+export function AuthForm({ onSignIn, onSignUp, onVerifyCode, onResendSignUpCode }: AuthFormProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [signUpStep, setSignUpStep] = useState<'credentials' | 'verify'>('credentials');
   const [identifier, setIdentifier] = useState('');
@@ -202,7 +203,7 @@ export function AuthForm({ onSignIn, onSignUp, onVerifyCode }: AuthFormProps) {
                 setInfo('');
                 setLoading(true);
                 try {
-                  await onSignUp(email, password, username);
+                  await onResendSignUpCode(email);
                   setInfo('Am retrimis codul de verificare pe email.');
                 } catch (err: any) {
                   setError(err.message || 'Nu am putut retrimite codul.');

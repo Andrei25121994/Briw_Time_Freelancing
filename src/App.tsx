@@ -3,7 +3,7 @@ import { AuthForm } from './components/AuthForm';
 import { useAuth } from './hooks/useAuth';
 
 function App() {
-  const { user, loading, signIn, signUp, verifySignUpCode, signOut } = useAuth();
+  const { user, loading, signIn, signUp, verifySignUpCode, resendSignUpCode, signOut } = useAuth();
 
   if (loading) {
     return (
@@ -14,7 +14,7 @@ function App() {
   }
 
   if (!user) {
-    return <AuthForm onSignIn={signIn} onSignUp={signUp} onVerifyCode={verifySignUpCode} />;
+    return <AuthForm onSignIn={signIn} onSignUp={signUp} onVerifyCode={verifySignUpCode} onResendSignUpCode={resendSignUpCode} />;
   }
 
   return (
