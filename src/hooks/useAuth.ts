@@ -21,6 +21,7 @@ const clearSupabaseAuthStorage = () => {
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const authRedirectUrl = import.meta.env.VITE_APP_URL || window.location.origin;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -47,6 +48,7 @@ export function useAuth() {
       email: email.trim().toLowerCase(),
       password,
       options: {
+        emailRedirectTo: authRedirectUrl,
         data: {
           username: cleanUsername,
         },
